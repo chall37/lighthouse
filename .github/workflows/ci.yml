@@ -40,7 +40,7 @@ jobs:
         python -m build --wheel
 
     - name: Upload wheel artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: lighthouse-wheel
         path: dist/*.whl
