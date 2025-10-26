@@ -104,6 +104,10 @@ jobs:
     - name: Check dependencies for vulnerabilities with pip-audit
       run: |
         pip install -e .
-        # Build ignore flags from .pip-audit-ignores.txt
-        IGNORE_FLAGS=$(grep -v '^#' .pip-audit-ignores.txt | grep -v '^$' | sed 's/^/--ignore-vuln /' | tr '\n' ' ')
-        pip-audit --skip-editable $IGNORE_FLAGS
+        # Build ignore flags from .pip-audit-ignores.txt if any exist
+        IGNORE_FLAGS=$(grep -v '^#' .pip-audit-ignores.txt | grep -v '^$' | sed 's/^/--ignore-vuln /' | tr '\n' ' ' || true)
+        if [ -n "$IGNORE_FLAGS" ]; then
+          pip-audit --skip-editable $IGNORE_FLAGS
+        else
+          pip-audit --skip-editable
+        fi

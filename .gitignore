@@ -256,6 +256,7 @@ cython_debug/
 # Lighthouse specific
 config.yaml
 .lighthouse/
+localscripts/
 
 .gitea-token
 .ci-logs/

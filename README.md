@@ -1,6 +1,6 @@
 # Lighthouse
 
-[![CI](https://gitea.notyourz.org/hall/lighthouse/actions/workflows/ci.yml/badge.svg)](https://gitea.notyourz.org/hall/lighthouse/actions)
+[![CI](https://github.com/chall37/lighthouse/actions/workflows/ci.yml/badge.svg)](https://github.com/chall37/lighthouse/actions)
 
 A lightweight, plugin-driven monitoring daemon that watches logs and metrics and delivers alerts through Pushover, webhooks, or custom notifiers.
 
@@ -245,3 +245,4 @@ In high-activity environments (busy directories, network drives, millions of eve
 ## Contributing
 
 Contributions welcome! Please open an issue or pull request.
+
