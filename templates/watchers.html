@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Watchers</h1>
+    <p>Editing watchers is not yet implemented.</p>
+
+    <div class="config-section">
+        <h2>Current Watchers</h2>
+        {% for watcher in config.watchers %}
+            <h3>Watcher: {{ watcher.name }}</h3>
+            <h4>Observer: {{ watcher.observer.type }}</h4>
+            <pre>{{ watcher.observer.config }}</pre>
+            <h4>Trigger: {{ watcher.trigger.type }}</h4>
+            <pre>{{ watcher.trigger.config }}</pre>
+            <h4>Evaluator: {{ watcher.evaluator.type }}</h4>
+            <pre>{{ watcher.evaluator.config }}</pre>
+        {% endfor %}
+    </div>
+{% endblock %}

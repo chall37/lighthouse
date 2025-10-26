@@ -1,0 +1,100 @@
+# Lighthouse Configuration Example
+# Demonstrates the new plugin-based architecture
+
+# Watchers define what to monitor
+watchers:
+  # Example 1: Simple log pattern matching
+  - name: "Restic Backup Errors"
+    observer:
+      type: "log_pattern"
+      config:
+        log_file: "/var/log/restic-backup.log"
+        patterns:
+          - "ERROR"
+          - "FATAL"
+          - "failed to backup"
+    trigger:
+      type: "file_event"
+      config:
+        path: "/var/log/restic-backup.log"
+        events: ["modified"]
+    evaluator:
+      type: "pattern_match"
+      config:
+        severity: "high"
+
+  # Example 2: iDrive backup - persistent file failures
+  - name: "iDrive Persistent Failures"
+    observer:
+      type: "metric"
+      config:
+        extractor:
+          type: "line_count"
+          source: "/opt/IDriveForLinux/idriveIt/user_profile/username/email@example.com/Backup/DefaultBackupSet/ERROR/permissionError.txt"
+          pattern: "\\[FAILED\\]"
+    trigger:
+      type: "file_event"
+      config:
+        path: "/opt/IDriveForLinux/idriveIt/user_profile/username/email@example.com/Backup/DefaultBackupSet/ERROR/permissionError.txt"
+        events: ["modified", "created"]
+    evaluator:
+      type: "sequential_growth"
+      config:
+        severity: "medium"
+
+  # Example 3: iDrive service monitoring
+  - name: "iDrive Service Health"
+    observer:
+      type: "service"
+      config:
+        check_type: "process"
+        service_name: "idrive"
+    trigger:
+      type: "temporal"
+      config:
+        interval_seconds: 3600  # Check every hour
+    evaluator:
+      type: "state_change"
+      config:
+        alert_on: "true_to_false"  # Only alert when service goes down
+        severity: "critical"
+
+  # Example 4: Scheduled metric check
+  - name: "Daily Disk Usage Check"
+    observer:
+      type: "metric"
+      config:
+        extractor:
+          type: "command"
+          command: "df -h / | awk 'NR==2 {print $5}' | sed 's/%//'"
+    trigger:
+      type: "temporal"
+      config:
+        interval_seconds: 86400  # Once per day
+    evaluator:
+      type: "threshold"
+      config:
+        operator: "gt"
+        value: 80  # Alert if over 80%
+        severity: "high"
+
+# Notifiers define where alerts go
+notifiers:
+  # Primary notification via Pushover
+  - type: "pushover"
+    config:
+      user_key: "your-pushover-user-key-here"
+      api_token: "your-pushover-api-token-here"
+      priority: 0
+
+  # Also log to console for debugging
+  - type: "console"
+    config: {}
+
+# Rate limiting to prevent alert fatigue
+rate_limiting:
+  cooldown_seconds: 3600  # Don't repeat same alert within 1 hour
+  max_per_hour: 10  # Maximum 10 alerts per hour total
+
+# State storage location
+state_dir: "/var/lib/lighthouse"

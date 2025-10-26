@@ -1,0 +1,3 @@
+# pip-audit vulnerability ignores
+# Format: one vulnerability ID per line (GHSA-*, CVE-*, or PYSEC-*)
+# Add a comment above each entry explaining why it's ignored

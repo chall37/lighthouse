@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>General Settings</h1>
+
+    <form action="/" method="post">
+        <h2>Rate Limiting</h2>
+        <div>
+            <label for="cooldown_seconds">Cooldown Seconds:</label>
+            <input type="number" id="cooldown_seconds" name="cooldown_seconds" value="{{ config.rate_limiting.cooldown_seconds }}">
+        </div>
+        <div>
+            <label for="max_per_hour">Max Per Hour:</label>
+            <input type="number" id="max_per_hour" name="max_per_hour" value="{{ config.rate_limiting.max_per_hour }}">
+        </div>
+        <button type="submit">Save General Settings</button>
+    </form>
+{% endblock %}

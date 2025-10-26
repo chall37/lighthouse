@@ -1,0 +1,116 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lighthouse"
+version = "0.1.0"
+description = "A notification daemon for monitoring system logs and alerting on errors"
+readme = "README.md"
+requires-python = ">=3.12"
+license = {text = "Apache-2.0"}
+authors = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+keywords = ["monitoring", "notifications", "logs", "daemon", "pushover"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: POSIX :: Linux",
+    "Topic :: System :: Monitoring",
+]
+
+dependencies = [
+    "watchdog>=4.0.0",
+    "pyyaml>=6.0",
+    "requests>=2.31.0",
+    "pydantic>=2.0",
+    "xxhash>=3.4.0",
+    "pywin32>=306; sys_platform == 'win32'",
+    "fastapi>=0.100.0",
+    "uvicorn>=0.22.0",
+    "Jinja2>=3.1.2",
+    "python-multipart>=0.0.7",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-mock>=3.12.0",
+    "mypy>=1.7.0",
+    "types-PyYAML",
+    "types-requests",
+    "ruff>=0.1.0",
+    "bandit>=1.7.0",
+    "safety>=2.3.0",
+    "pylint>=3.0.0",
+    "radon>=6.0.0",
+]
+
+[project.scripts]
+lighthouse = "lighthouse.daemon:main"
+lighthouse-notify = "lighthouse.cli:main"
+lighthouse-web = "lighthouse.web:app"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["lighthouse*"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "F",      # pyflakes
+    "I",      # isort (import sorting)
+    "N",      # pep8-naming
+    "W",      # pycodestyle warnings
+    "B",      # flake8-bugbear (likely bugs)
+    "S",      # flake8-bandit (security)
+    "SIM",    # flake8-simplify (simplification rules)
+    "PERF",   # Perflint (performance anti-patterns)
+    "RUF",    # Ruff-specific rules
+    "UP",     # pyupgrade (modern Python syntax)
+    "PTH",    # flake8-use-pathlib (prefer pathlib)
+    "C90",    # mccabe (complexity)
+    "ARG",    # flake8-unused-arguments
+]
+ignore = [
+    "E501",   # Line too long (handled by formatter)
+    "RET504", # Unnecessary variable assignment before return
+    "RET505", # Unnecessary else after return
+    "RET506", # Unnecessary else after raise
+    "RET507", # Unnecessary else after continue
+    "RET508", # Unnecessary else after break
+    "SIM103", # Return condition directly (we want explicit returns)
+    "PTH123", # Use Path.open() - we use builtins.open() for simplicity
+    "PERF401",# Manual list comprehension - explicit loops are clearer
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101", "S105", "S108", "S110", "ARG002", "B017"]  # Allow assert, test secrets, temp files, try-except-pass, unused args in test stubs, bare Exception
+"lighthouse/observers/metric.py" = ["S602"]  # subprocess with shell=True needed for command extractor
+"lighthouse/observers/service.py" = ["S603", "S607"]  # subprocess needed for system monitoring
+"lighthouse/triggers/file_event.py" = ["C901"]  # Event handler factory intentionally complex
+"lighthouse/triggers/webhook.py" = ["S110"]  # try-except-pass for connection cleanup
+"lighthouse/cli.py" = ["C901", "ARG001"]  # CLI commands intentionally complex, some args unused for interface consistency
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10  # Flag functions with >10 branches
