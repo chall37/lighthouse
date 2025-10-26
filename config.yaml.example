@@ -1,0 +1,146 @@
+# Lighthouse configuration example (plugin-based schema)
+# Copy this file to config.yaml and customize it for your environment.
+
+# Watchers define what Lighthouse monitors. Each watcher pairs an
+# observer, trigger, and evaluator.
+watchers:
+  # ------------------------------------------------------------------
+  # Example 1: Log pattern monitoring for your backup job.
+  - name: "Restic Backup Errors"
+    observer:
+      type: "log_pattern"
+      config:
+        log_file: "/var/log/restic-backup-docker.log"
+        patterns:
+          - "ERROR"
+          - "Backup failed"
+          - "Fatal"
+    trigger:
+      type: "file_event"
+      config:
+        path: "/var/log/restic-backup-docker.log"
+        events: ["modified"]
+    evaluator:
+      type: "pattern_match"
+      config:
+        severity: "high"
+    # Optional priority override passed to notifiers
+    # priority: 1
+
+  # ------------------------------------------------------------------
+  # Example 2: Track recurring failures in an application log by
+  # counting the matching lines.
+  - name: "SSH Failure Count"
+    observer:
+      type: "metric"
+      config:
+        extractor:
+          type: "line_count"
+          source: "/var/log/auth.log"
+          pattern: "Failed password"
+    trigger:
+      type: "temporal"
+      config:
+        interval_seconds: 300  # Check every 5 minutes
+    evaluator:
+      type: "threshold"
+      config:
+        operator: "gt"
+        value: 10          # Alert if more than 10 failures in the window
+        severity: "medium"
+
+  # ------------------------------------------------------------------
+  # Example 3: Monitor whether a systemd service is running and alert
+  # when it goes down.
+  - name: "GitLab Service Health"
+    observer:
+      type: "service"
+      config:
+        check_type: "systemd"
+        service_name: "gitlab-runner.service"
+    trigger:
+      type: "temporal"
+      config:
+        interval_seconds: 600  # Check every 10 minutes
+    evaluator:
+      type: "state_change"
+      config:
+        alert_on: "true_to_false"  # Alert when the service stops
+        severity: "critical"
+
+# Notifiers define where alerts are delivered. Configure one or more.
+notifiers:
+  - type: "pushover"
+    config:
+      user_key: "your-pushover-user-key"
+      api_token: "your-pushover-api-token"
+      priority: 0  # Default Pushover priority (-2 to 2)
+  - type: "console"
+    config: {}
+
+# Rate limiting prevents duplicate notifications.
+rate_limiting:
+  cooldown_seconds: 3600  # Don't resend the same alert within 1 hour
+  max_per_hour: 10        # Cap total alerts per hour (0 = unlimited)
+
+# Directory where Lighthouse stores state (rate-limiting data, history).
+# Ensure the daemon user can read and write to this path.
+state_dir: "/var/lib/lighthouse"
+
+# ============================================================================
+# WEBHOOK TRIGGER EXAMPLE
+# ============================================================================
+# Trigger watchers via authenticated HTTP webhooks. Perfect for external
+# systems (CI/CD, backup scripts, etc.) to trigger monitoring checks.
+#
+# Security Design (Opaque API):
+# - Single opaque endpoint: POST /api (never varies)
+# - Immediate TCP RST on all requests (constant timing, no info leakage)
+# - Background async processing (no timing side-channels)
+# - Bearer token authentication
+# - Timestamp-based replay protection (±5 min tolerance)
+# - Rate-limited failure logging (internal only)
+# - NO HTTP RESPONSES EVER (prevents DoS and reconnaissance)
+#
+# Setup:
+# 1. Generate an API key:
+#    lighthouse api-key generate -o /etc/lighthouse/webhook-api-keys.txt
+#
+# 2. Configure webhook trigger in watcher:
+#    trigger:
+#      type: "webhook"
+#      config:
+#        port: 8888
+#        api_key_file: "/etc/lighthouse/webhook-api-keys.txt"
+#        host: "127.0.0.1"  # Localhost only (use reverse proxy for external)
+#
+# 3. Trigger from external system:
+#    curl -X POST http://127.0.0.1:8888/api \
+#      -H "Authorization: Bearer your-generated-key" \
+#      -H "Content-Type: application/json" \
+#      -d '{"target": "backup-check", "timestamp": "2025-10-26T12:00:00Z"}'
+#
+# IMPORTANT: Connection will be reset immediately (TCP RST) - this is normal!
+# The webhook processes requests asynchronously after closing the connection.
+#
+# TLS/HTTPS: Use a reverse proxy (nginx, caddy) for TLS termination.
+# See documentation for reverse proxy configuration examples.
+#
+# Example watcher using webhook trigger:
+# watchers:
+#   - name: "backup-check"  # This name is used in webhook "target" field
+#     observer:
+#       type: "log_pattern"
+#       config:
+#         log_file: "/var/log/backup.log"
+#         patterns: ["ERROR", "FAILED"]
+#     trigger:
+#       type: "webhook"
+#       config:
+#         port: 8888
+#         api_key_file: "/etc/lighthouse/webhook-api-keys.txt"
+#         host: "127.0.0.1"  # Bind to localhost only (default)
+#     evaluator:
+#       type: "pattern_match"
+#       config:
+#         severity: "high"

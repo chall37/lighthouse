@@ -1,0 +1,31 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [staging]
+    tags:
+      - 'staging-v*'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Staging
+    runs-on: ubuntu-22.04
+    needs: []  # TODO: Will add dependency on CI workflow
+
+    steps:
+    - name: Download wheel artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: lighthouse-wheel
+        path: ./dist
+
+    - name: Copy wheel to staging trigger directory
+      run: |
+        cp dist/*.whl /data/lighthouse-wheel-latest.whl
+        touch /data/deploy-lighthouse.trigger
+
+    - name: Wait for deployment to complete
+      run: |
+        echo "Deployment triggered. Check logs on staging server:"
+        echo "  tail -f /var/log/lighthouse-deploy.log"

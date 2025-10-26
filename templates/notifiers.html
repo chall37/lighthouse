@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Notifiers</h1>
+    <p>Editing notifiers is not yet implemented.</p>
+    
+    <div class="config-section">
+        <h2>Current Notifiers</h2>
+        {% for notifier in config.notifiers %}
+            <h3>Notifier: {{ notifier.type }}</h3>
+            <pre>{{ notifier.config }}</pre>
+        {% endfor %}
+    </div>
+{% endblock %}
